@@ -2,6 +2,7 @@ import { Phone, FileText, Activity, Send, Calendar ,X } from 'lucide-react';
 import axios from "axios";
 import { useState } from 'react';
 import { useData } from '../context/DataContext';
+import toast from 'react-hot-toast';
 
 const Contact = () => {
 
@@ -25,7 +26,7 @@ const Contact = () => {
     const res = await axios.post(endpoint,data,);
 
     if (res.data.success) {
-      alert("Message sent successfully!");
+      toast.success("Message sent successfully")
       setName("");
       setEmail("");
       setMessage("");

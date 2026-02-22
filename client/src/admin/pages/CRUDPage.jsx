@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAdmin } from '../context/AdminContext';
-import { Trash2, Edit, Plus, X, Save, Loader2, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { Trash2, Edit, Plus, X, Save, Loader2, Image as ImageIcon, UploadCloud, PlusCircle, MinusCircle } from 'lucide-react';
 
 const CRUDPage = ({ title, module, fields, readOnly = false }) => {
   const [items, setItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
-  const [previews, setPreviews] = useState({}); 
+  const [previews, setPreviews] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { token } = useAdmin();
@@ -37,11 +37,24 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
         setFormData({ ...formData, [name]: file });
         setPreviews({ ...previews, [name]: URL.createObjectURL(file) });
       }
-    } else if (name === 'tech') {
-      setFormData({ ...formData, [name]: value.split(',').map(t => t.trim()) });
     } else {
       setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
     }
+  };
+
+  const handleArrayChange = (fieldName, index, value) => {
+    const newArray = [...(formData[fieldName] || [])];
+    newArray[index] = value;
+    setFormData({ ...formData, [fieldName]: newArray });
+  };
+
+  const addArrayItem = (fieldName) => {
+    setFormData({ ...formData, [fieldName]: [...(formData[fieldName] || []), ""] });
+  };
+
+  const removeArrayItem = (fieldName, index) => {
+    const newArray = (formData[fieldName] || []).filter((_, i) => i !== index);
+    setFormData({ ...formData, [fieldName]: newArray });
   };
 
   const handleSubmit = async (e) => {
@@ -49,15 +62,21 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
     setSubmitting(true);
     try {
       const data = new FormData();
+      
       Object.keys(formData).forEach(key => {
-        if (key === 'galleryImages' && Array.isArray(formData[key])) {
-          formData[key].forEach(val => {
-            if (val instanceof File) data.append('galleryImages', val);
-          });
-        } else if (key === 'tech' && Array.isArray(formData[key])) {
-          data.append(key, JSON.stringify(formData[key]));
+        const fieldConfig = fields.find(f => f.name === key);
+        const value = formData[key];
+
+        if (fieldConfig?.type === 'file') {
+          if (Array.isArray(value)) {
+            value.forEach(file => { if (file instanceof File) data.append(key, file); });
+          } else {
+            if (value instanceof File) data.append(key, value);
+          }
+        } else if (fieldConfig?.type === 'array' || Array.isArray(value)) {
+          data.append(key, JSON.stringify(value || []));
         } else {
-          data.append(key, formData[key]);
+          data.append(key, value !== undefined ? value : "");
         }
       });
 
@@ -70,13 +89,16 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
       setPreviews({});
       setEditingId(null);
       fetchData();
-    } catch (err) { alert("Save failed."); } finally { setSubmitting(false); }
+    } catch (err) { 
+        console.error(err);
+        alert("Save failed: " + (err.response?.data?.message || err.message)); 
+    } finally { setSubmitting(false); }
   };
 
   const startEdit = (item) => {
     setEditingId(item._id);
-    setFormData(item);
-    setPreviews({}); 
+    setFormData({ ...item }); 
+    setPreviews({});
     setIsModalOpen(true);
   };
 
@@ -98,18 +120,17 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
         {!readOnly && (
           <button onClick={() => { setEditingId(null); setFormData({}); setPreviews({}); setIsModalOpen(true); }}
             className="bg-[#426369] text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase flex items-center gap-2 cursor-pointer transition-transform hover:scale-105">
-            <Plus size={16} /> New {title.slice(0,-1)}
+            <Plus size={16} /> New {title.slice(0, -1)}
           </button>
         )}
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-        {loading ? ( <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-slate-300" size={40} /></div> ) : (
+        {loading ? (<div className="py-20 flex justify-center"><Loader2 className="animate-spin text-slate-300" size={40} /></div>) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  {/* Map over the first 3 fields regardless of type */}
                   {fields.map(f => (
                     <th key={f.name} className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">{f.label}</th>
                   ))}
@@ -123,15 +144,21 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
                       <td key={f.name} className="p-6 text-sm font-semibold text-slate-600">
                         {f.type === 'file' ? (
                           <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                            <img 
-                              src={Array.isArray(item[f.name]) ? item[f.name][0] : item[f.name]} 
-                              className="w-full h-full object-cover" 
+                            <img
+                              src={Array.isArray(item[f.name]) ? item[f.name][0] : item[f.name]}
+                              className="w-full h-full object-cover"
                               alt={f.label}
-                              onError={(e) => e.target.src='https://placehold.co/100x100?text=NA'} 
+                              onError={(e) => e.target.src = 'https://placehold.co/100x100?text=NA'}
                             />
                           </div>
+                        ) : f.type === 'array' ? (
+                            <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-md">
+                                {Array.isArray(item[f.name]) ? `${item[f.name].length} items` : '0 items'}
+                            </span>
                         ) : (
-                          <span>{typeof item[f.name] === 'boolean' ? (item[f.name] ? 'Yes' : 'No') : String(item[f.name] || '—')}</span>
+                          <span className="truncate max-w-[150px] block">
+                            {typeof item[f.name] === 'boolean' ? (item[f.name] ? 'Yes' : 'No') : String(item[f.name] || '—')}
+                          </span>
                         )}
                       </td>
                     ))}
@@ -149,35 +176,35 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{editingId ? 'Edit' : 'Create'} {title.slice(0,-1)}</h3>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{editingId ? 'Edit' : 'Create'} {title.slice(0, -1)}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
               {fields.map(f => (
                 <div key={f.name} className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                     {f.label} {f.required && <span className="text-red-400">*</span>}
                   </label>
-                  
+
                   {f.type === 'file' ? (
                     <div className="space-y-4">
                       <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-slate-100/50 transition-all text-center">
-                        <input 
-                          type="file" 
-                          name={f.name} 
-                          multiple={f.multiple} 
-                          onChange={handleChange} 
-                          accept="image/*" 
-                          required={editingId ? false : f.required} 
-                          className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                        <input
+                          type="file"
+                          name={f.name}
+                          multiple={f.multiple}
+                          onChange={handleChange}
+                          accept="image/*"
+                          required={editingId ? false : f.required}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
                         />
                         <UploadCloud className="mx-auto text-slate-300 mb-2" size={32} />
                         <p className="text-[10px] font-black uppercase text-slate-400">Click to upload {f.label}</p>
                       </div>
-                      
+
                       {(previews[f.name] || formData[f.name]) && (
                         <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                           {f.multiple ? (
@@ -190,6 +217,34 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
                         </div>
                       )}
                     </div>
+                  ) : f.type === 'array' ? (
+                    <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      {(formData[f.name] || []).map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => handleArrayChange(f.name, idx, e.target.value)}
+                            placeholder={`Enter ${f.label} point...`}
+                            className="flex-1 bg-white border border-slate-100 rounded-xl p-3 text-sm font-bold outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeArrayItem(f.name, idx)}
+                            className="text-red-400 hover:text-red-500 transition-colors"
+                          >
+                            <MinusCircle size={24} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => addArrayItem(f.name)}
+                        className="flex items-center gap-2 text-[10px] font-black uppercase text-[#426369] hover:opacity-80 transition-opacity"
+                      >
+                        <PlusCircle size={18} /> Add {f.label} Item
+                      </button>
+                    </div>
                   ) : f.type === 'select' ? (
                     <select name={f.name} value={formData[f.name] || ''} onChange={handleChange} required={f.required} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#426369]/10">
                       <option value="">Select Option</option>
@@ -197,7 +252,7 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
                     </select>
                   ) : f.type === 'checkbox' ? (
                     <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <input 
+                      <input
                         type="checkbox" name={f.name} checked={formData[f.name] || false} onChange={handleChange}
                         className="w-5 h-5 accent-[#426369] cursor-pointer"
                       />
@@ -206,13 +261,13 @@ const CRUDPage = ({ title, module, fields, readOnly = false }) => {
                   ) : f.type === 'textarea' ? (
                     <textarea name={f.name} value={formData[f.name] || ''} onChange={handleChange} required={f.required} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#426369]/10 min-h-[100px]" />
                   ) : (
-                    <input 
-                      type={f.type || 'text'} 
-                      name={f.name} 
-                      value={f.name === 'tech' && Array.isArray(formData[f.name]) ? formData[f.name].join(', ') : (formData[f.name] || '')} 
-                      onChange={handleChange} 
-                      required={f.required} 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#426369]/10" 
+                    <input
+                      type={f.type || 'text'}
+                      name={f.name}
+                      value={formData[f.name] || ''}
+                      onChange={handleChange}
+                      required={f.required}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#426369]/10"
                     />
                   )}
                 </div>

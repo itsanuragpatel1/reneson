@@ -1,5 +1,10 @@
-const ProjectCard = ({ title, description, tech, mainImage, serviceType }) => (
-  <div className="group bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 hover:border-[#426369]/20 transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-[#426369]/5">
+import { useNavigate } from "react-router-dom";
+
+const ProjectCard = ({_id, title, description, tech, mainImage, serviceType }) => {
+  const navigate=useNavigate();
+
+  return (
+  <div onClick={()=>navigate(`/project/${_id}`)} className="group bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 hover:border-[#426369]/20 transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-[#426369]/5">
     
     {/* 1. Image Container with Floating Service Tag */}
     <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
@@ -46,6 +51,6 @@ const ProjectCard = ({ title, description, tech, mainImage, serviceType }) => (
       </div>
     </div>
   </div>
-);
+)};
 
 export default ProjectCard;

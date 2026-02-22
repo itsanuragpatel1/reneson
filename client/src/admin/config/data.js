@@ -9,10 +9,11 @@ export const adminConfigs = {
         required: true 
       },
       { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'tech', label: 'Technologies (Comma Separated)', type: 'text', required: false },
+      { name: 'tech', label: 'Technologies', type: 'array', required: false },
       { name: 'mainImage', label: 'Main Display Image', type: 'file', required: true },
       { name: 'galleryImages', label: 'Gallery Images', type: 'file', multiple: true, required: false },
-      { name: 'isFeatured', label: 'Featured Project', type: 'checkbox', required: false }
+      { name: 'isFeatured', label: 'Featured Project', type: 'checkbox', required: false },
+      { name: 'phaseCodes', label:'Phase Codes',type:'array',required:false}
     ]
   },
 
@@ -56,5 +57,18 @@ export const adminConfigs = {
       { name: 'label', label: 'Stat Label', type: 'text', required: true },
       { name: 'value', label: 'Numeric Value', type: 'number', required: true }
     ]
-  }
+  },
+
+  phase: {
+    title: "Phases",
+    module: "phase",
+    fields: [
+      { name: 'phaseCode',label: 'Phase Code (Unique)',type: 'text',required: true,},
+      {name: 'title',label: 'Phase Title',type: 'text',required: true},
+      {name: 'images',label: 'Images',type: 'file',multiple: true,required: false},
+    {name: 'summary',label: 'Summary Points',type: 'array', inputType: 'text',required: false},
+      {name: 'order',label: 'Display Order',type: 'number',required: false}
+    ]
+  },
+
 };

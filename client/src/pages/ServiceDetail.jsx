@@ -21,7 +21,6 @@ const ServiceDetail = () => {
   useEffect(() => {
     const fetchRelatedProjects = async () => {
       try {
-        console.log("making the reu")
         setLoadingProjects(true);
         const {data} = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/projects/service`, {
           params: { serviceType: serviceName } 
@@ -49,7 +48,7 @@ const ServiceDetail = () => {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-slate-900">
-              {data.title}<span className="text-[#426369]">.</span>
+              {data.title}
             </h1>
             <p className="text-xl text-gray-500 leading-relaxed max-w-xl">
               {data.description}
@@ -116,14 +115,7 @@ const ServiceDetail = () => {
             <div className="grid md:grid-cols-3 gap-8">
               {relatedProjects.length > 0 ? (
                 relatedProjects.map((project) => (
-                  <ProjectCard 
-                    key={project._id}
-                    title={project.title}
-                    description={project.description}
-                    tech={project.tech}
-                    image={project.image}
-                    serviceType={project.serviceType}
-                  />
+                  <ProjectCard {...project}/>
                 ))
               ) : (
                 <div className="col-span-3 text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">

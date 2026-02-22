@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FolderKanban, Users, MessageSquare, LogOut, BarChart } from 'lucide-react';
-import { Briefcase, BarChart3, Users2, ShieldCheck } from 'lucide-react';
+import { Briefcase, BarChart3, Users2, ShieldCheck,Activity  } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 
 const AdminLayout = ({ children }) => {
@@ -14,6 +14,7 @@ const menuItems = [
   { name: 'Statistics', path: '/admin/stats', icon: BarChart3 },
   { name: 'Team Members', path: '/admin/team', icon: Users2 },
   { name: 'Testimonials', path: '/admin/testimonials', icon: ShieldCheck },
+  { name: 'Phases', path: '/admin/phase', icon: Activity  },
 //   { name: 'Inquiries', path: '/admin/contacts', icon: MessageSquare },
 ];
 

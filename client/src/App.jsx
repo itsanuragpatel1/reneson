@@ -14,6 +14,8 @@ import CRUDPage from './admin/pages/CRUDPage.jsx'
 import AdminLogin from './admin/pages/AdminLogin.jsx'
 import AdminLayout from './admin/pages/AdminLayout.jsx'
 import ProjectDetail from './pages/ProjectDetail.jsx'
+import ScrollToTop from './components/scrollToTop.jsx'
+import {Toaster} from 'react-hot-toast'
 
 function App() {
 
@@ -22,6 +24,8 @@ function App() {
 
   return (
     <>
+      <Toaster/>
+      <ScrollToTop/>
       {showScheduler && <GoogleCalender/>}
       <Routes>
         <Route path="/*" element={
@@ -32,7 +36,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/service/:serviceName" element={<ServiceDetail />} />
-              <Route path="/check"  element={<ProjectDetail/>}/>
+              <Route path="/project/:id" element={<ProjectDetail/>}/>
             </Routes>
             <Footer />
           </>
@@ -49,6 +53,7 @@ function App() {
                 <Route path="testimonials" element={<CRUDPage {...adminConfigs.testimonials} />} />
                 <Route path="clients" element={<CRUDPage {...adminConfigs.clients} />} />
                 <Route path="stats" element={<CRUDPage {...adminConfigs.stats} />} />
+                <Route path="phase" element={<CRUDPage {...adminConfigs.phase} />} />
               </Routes>
             </AdminLayout>
           ) : (

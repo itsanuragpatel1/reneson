@@ -118,14 +118,7 @@ useEffect(() => {
         ) : filteredProjects.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project._id}
-                title={project.title}
-                description={project.description}
-                tech={project.tech}
-                image={project.image}
-                serviceType={project.serviceType}
-              />
+              <ProjectCard {...project}/>
             ))}
           </div>
         ) : (
